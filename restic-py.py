@@ -19,10 +19,13 @@ def run_all_configs() -> None:
 
 
 def run_config(config: BackupConfig) -> None:
-    print(f"{Fore.YELLOW}--- Starting {Style.BRIGHT}{config}{Style.NORMAL} Restic Backup using Restic-Py ---{Style.RESET_ALL}")
+    print(
+        f"{Fore.YELLOW}--- Starting {Style.BRIGHT}{config}{Style.NORMAL} Restic Backup using Restic-Py ---{Style.RESET_ALL}"
+    )
 
     if config.mount_drives:
-        core.mount_drive(config.mount_drives)
+        for drive in config.mount_drives:
+            core.mount_drive(drive)
 
     # Add Restic backup logic here
 
