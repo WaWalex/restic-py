@@ -22,7 +22,8 @@ def run_config(config: BackupConfig) -> None:
     print(f"{Fore.YELLOW}--- Starting {Style.BRIGHT}{config}{Style.NORMAL} Restic Backup using Restic-Py ---")
 
     if config.mount_drives:
-        core.mount_drive(config.mount_drives)
+        for drive in config.mount_drives:
+            core.mount_drive(drive)
 
     if config.pre_backup_cmd:
         core.run_cmd(config.pre_backup_cmd)
