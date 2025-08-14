@@ -27,10 +27,10 @@ def run_config(config: BackupConfig) -> None:
     if config.pre_backup_cmd:
         core.run_cmd(config.pre_backup_cmd)
 
-    if config.restic_configuration and config.backup:
+    if config.backup:
         try:
             for backup_item in config.backup:
-                core.backup(config.restic_configuration, backup_item)
+                core.backup(backup_item)
         except Exception as e:
             print(f"{Fore.RED}Error during backup: {e}")
             if config.run_post_backup_cmd_on_backup_failure and config.post_backup_cmd:
@@ -48,17 +48,8 @@ if __name__ == "__main__":
 
     argv_len = len(sys.argv)
     if argv_len == 1:
-        print(f"{Fore.LIGHTCYAN_EX}(no args passed, running all backup configs){Style.RESET_ALL}\n")
+        print(f"{Fore.LIGHTCYAN_EX}(running all backup configs){Style.RESET_ALL}\n")
         run_all_configs()
-    elif argv_len == 2:
-        print(f"{Fore.LIGHTCYAN_EX}(running config: {sys.argv[1]}){Style.RESET_ALL}\n")
-
-        try:
-            config_obj = BackupConfig.from_json(f"./config/{sys.argv[1]}.json")
-            run_config(config_obj)
-        except (FileNotFoundError, ValueError) as e:
-            print(f"{Fore.RED}Error: {e}{Style.RESET_ALL}")
     else:
         print(f"{Fore.RED}Invalid arguments!{Style.RESET_ALL}")
         print(f"{Fore.RED}\t- no args: run all backup configs{Style.RESET_ALL}")
-        print(f"{Fore.RED}\t- 1 arg: run backup config name (without extension){Style.RESET_ALL}")

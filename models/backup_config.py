@@ -11,12 +11,6 @@ class MountDrive:
 
 
 @dataclass
-class ResticConfiguration:
-    repository_location: str
-    repository_password: str
-
-
-@dataclass
 class BackupItem:
     folder: str
     restic_tag: str
@@ -26,7 +20,6 @@ class BackupItem:
 class BackupConfig:
     config_file_path: str
     mount_drives: List[MountDrive] = field(default_factory=list)
-    restic_configuration: Optional[ResticConfiguration] = None
     pre_backup_cmd: Optional[str] = None
     backup: List[BackupItem] = field(default_factory=list)
     post_backup_cmd: Optional[str] = None
@@ -41,14 +34,9 @@ class BackupConfig:
             mount_drives_data = [MountDrive(**d) for d in data.get("mount_drives", [])]
             backup_data = [BackupItem(**d) for d in data.get("backup", [])]
 
-            restic_conf_data = None
-            if "restic_configuration" in data:
-                restic_conf_data = ResticConfiguration(**data["restic_configuration"])
-
             return cls(
                 config_file_path=config_file_path,
                 mount_drives=mount_drives_data,
-                restic_configuration=restic_conf_data,
                 pre_backup_cmd=data.get("pre_backup_cmd"),
                 backup=backup_data,
                 post_backup_cmd=data.get("post_backup_cmd"),

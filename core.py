@@ -5,7 +5,7 @@ from typing import List, Optional, Union
 
 from colorama import Fore, Style
 
-from models.backup_config import BackupItem, MountDrive, ResticConfiguration
+from models.backup_config import BackupItem, MountDrive
 
 
 def _execute_command(
@@ -73,13 +73,9 @@ def run_cmd(cmd: str) -> None:
     )
 
 
-def backup(restic_configuration: ResticConfiguration, backup_item: BackupItem) -> None:
+def backup(backup_item: BackupItem) -> None:
     command = [
         "restic",
-        "-r",
-        restic_configuration.repository_location,
-        "--password-file",
-        restic_configuration.repository_password,
         "backup",
         backup_item.folder,
         "--tag",

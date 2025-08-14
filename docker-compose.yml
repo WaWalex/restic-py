@@ -1,0 +1,12 @@
+services:
+  restic-py:
+    build: .
+    volumes:
+      - .:/app
+      - /mnt/ssd:/mnt/ssd:ro
+      - /mnt/bkp:/mnt/bkp
+    environment:
+      RESTIC_REPOSITORY: /mnt/bkp/restic-repo
+      RESTIC_PASSWORD: password
+    privileged: true
+    command: python3 restic-py.py
