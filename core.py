@@ -1,11 +1,29 @@
 import os
 import subprocess
 import sys
-from typing import List
+from typing import List, Optional, Union
 
 from colorama import Fore, Style
 
 from models.backup_config import BackupItem, MountDrive, ResticConfiguration
+
+
+def _execute_command(
+    cmd: Union[str, List[str]], success_msg: str, error_msg: str, shell: bool = False, **kwargs
+) -> None:
+    print(f"{Fore.YELLOW}Executing: {Style.BRIGHT}{' '.join(cmd) if isinstance(cmd, list) else cmd}{Style.RESET_ALL}")
+    try:
+        subprocess.run(cmd, check=True, shell=shell, stdout=sys.stdout, stderr=sys.stderr, **kwargs)
+        print(f"{Fore.GREEN}{success_msg}{Style.RESET_ALL}")
+    except subprocess.CalledProcessError as e:
+        print(f"{Fore.RED}{error_msg}. Command failed with exit code {e.returncode}{Style.RESET_ALL}")
+        raise
+    except FileNotFoundError:
+        print(f"{Fore.RED}{error_msg}. Command not found. Please ensure it is in your system's PATH.{Style.RESET_ALL}")
+        raise
+    except Exception as e:
+        print(f"{Fore.RED}{error_msg}. An unexpected error occurred: {e}{Style.RESET_ALL}")
+        raise
 
 
 def mount_drive(drive: MountDrive) -> None:
@@ -28,59 +46,46 @@ def mount_drive(drive: MountDrive) -> None:
     if os.path.ismount(mount_point):
         print(f"{Fore.CYAN}Drive with UUID {device_uuid} is already mounted at {mount_point}.{Style.RESET_ALL}")
     else:
-        print(f"{Fore.MAGENTA}Attempting to mount drive with UUID {device_uuid} to {mount_point}...{Style.RESET_ALL}")
-
         mount_command = ["sudo", "mount", "-U", device_uuid, mount_point]
-
         try:
-            subprocess.run(mount_command, check=True, capture_output=True, text=True)
-            print(f"{Fore.GREEN}Drive {device_uuid} successfully mounted to {mount_point}.{Style.RESET_ALL}")
+            _execute_command(
+                cmd=mount_command,
+                success_msg=f"Drive {device_uuid} successfully mounted to {mount_point}.",
+                error_msg=f"Error: Failed to mount drive {device_uuid} to {mount_point}.",
+                capture_output=True,
+                text=True,
+            )
         except subprocess.CalledProcessError as e:
-            print(f"{Fore.RED}Error: Failed to mount drive {device_uuid} to {mount_point}.{Style.RESET_ALL}")
+            # Re-printing the error output for this specific case
             print(f"{Fore.RED}Command output: {e.stdout.strip()}{Style.RESET_ALL}")
             print(f"{Fore.RED}Error output: {e.stderr.strip()}{Style.RESET_ALL}")
-        except FileNotFoundError:
-            print(
-                f"{Fore.RED}Error: The 'mount' command was not found. Please ensure it is in your system's PATH.{Style.RESET_ALL}"
-            )
+        except e:
+            return
 
 
 def run_cmd(cmd: str) -> None:
-    print(f"{Fore.YELLOW}--- Running command: {Style.BRIGHT}{cmd}{Style.NORMAL} ---")
-
-    try:
-        subprocess.run(cmd, shell=True, check=True, executable="/bin/bash", stdout=sys.stdout, stderr=sys.stderr)
-        print(f"{Fore.GREEN}Command executed successfully.{Style.RESET_ALL}")
-    except subprocess.CalledProcessError as e:
-        print(f"{Fore.RED}Error: Command failed with exit code {e.returncode}{Style.RESET_ALL}")
-    except FileNotFoundError:
-        print(f"{Fore.RED}Error: The specified executable was not found.{Style.RESET_ALL}")
-    except Exception as e:
-        print(f"{Fore.RED}An unexpected error occurred: {e}{Style.RESET_ALL}")
+    _execute_command(
+        cmd=cmd,
+        success_msg="Command executed successfully.",
+        error_msg="Error: Command failed",
+        shell=True,
+        executable="/bin/bash",
+    )
 
 
 def backup(restic_configuration: ResticConfiguration, backup_item: BackupItem) -> None:
-    print(f"{Fore.CYAN}--- Starting Restic backup for folder: {Style.BRIGHT}{backup_item.folder}{Style.NORMAL} ---")
+    command = [
+        "restic",
+        "-r",
+        restic_configuration.repository_location,
+        "--password-file",
+        restic_configuration.repository_password,
+        "backup",
+        backup_item.folder,
+        "--tag",
+        backup_item.restic_tag,
+    ]
 
-    try:
-        command = [
-            "restic",
-            "-r",
-            restic_configuration.repository_location,
-            "--password-file",
-            restic_configuration.repository_password,
-            "backup",
-            backup_item.folder,
-            "--tag",
-            backup_item.restic_tag,
-        ]
-        subprocess.run(command, check=True, stdout=sys.stdout, stderr=sys.stderr)
-        print(f"{Fore.GREEN}Restic backup completed successfully.{Style.RESET_ALL}")
-    except FileNotFoundError:
-        print(
-            f"{Fore.RED}Error: 'restic' command not found. Please ensure Restic is installed and in your PATH.{Style.RESET_ALL}"
-        )
-        raise
-    except subprocess.CalledProcessError as e:
-        print(f"{Fore.RED}Error: Restic backup failed with exit code {e.returncode}.{Style.RESET_ALL}")
-        raise
+    _execute_command(
+        cmd=command, success_msg="Restic backup completed successfully.", error_msg="Error: Restic backup failed"
+    )
