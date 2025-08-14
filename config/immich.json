@@ -1,0 +1,25 @@
+{
+  "mount_drives": [
+    {
+      "device_uuid": "EEE000DBE000A000",
+      "mount_location": "/mnt/bkp"
+    }
+  ],
+  "restic_configuration": {
+    "repository_location": "/mnt/bkp/restic-repo",
+    "repository_password": "password"
+  },
+  "pre_backup_cmd": "cd /home/ubuntu/services/immich && docker compose down",
+  "backup": [
+    {
+      "folder": "/home/ubuntu/services/immich",
+      "restic_tag": "immich-ssd-home"
+    },
+    {
+      "folder": "/mnt/ssd/services/immich",
+      "restic_tag": "immich-ssd-data"
+    }
+  ],
+  "post_backup_cmd": "cd /home/ubuntu/services/immich && docker compose up -d",
+  "run_post_backup_cmd_on_backup_failure": true
+}
