@@ -1,5 +1,6 @@
 import os
 import subprocess
+import sys
 from typing import List
 
 from colorama import Fore, Style
@@ -42,3 +43,17 @@ def mount_drive(drive: MountDrive) -> None:
             print(
                 f"{Fore.RED}Error: The 'mount' command was not found. Please ensure it is in your system's PATH.{Style.RESET_ALL}"
             )
+
+
+def run_cmd(cmd: str) -> None:
+    print(f"{Fore.YELLOW}--- Running pre-backup command: {Style.BRIGHT}{cmd}{Style.NORMAL} ---")
+
+    try:
+        subprocess.run(cmd, shell=True, check=True, executable="/bin/bash", stdout=sys.stdout, stderr=sys.stderr)
+        print(f"{Fore.GREEN}Command executed successfully.{Style.RESET_ALL}")
+    except subprocess.CalledProcessError as e:
+        print(f"{Fore.RED}Error: Command failed with exit code {e.returncode}{Style.RESET_ALL}")
+    except FileNotFoundError:
+        print(f"{Fore.RED}Error: The specified executable was not found.{Style.RESET_ALL}")
+    except Exception as e:
+        print(f"{Fore.RED}An unexpected error occurred: {e}{Style.RESET_ALL}")

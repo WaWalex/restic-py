@@ -27,7 +27,8 @@ def run_config(config: BackupConfig) -> None:
         for drive in config.mount_drives:
             core.mount_drive(drive)
 
-    # Add Restic backup logic here
+    if config.pre_backup_cmd:
+        core.run_cmd(config.pre_backup_cmd)
 
 
 if __name__ == "__main__":
