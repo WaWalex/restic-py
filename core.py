@@ -5,7 +5,7 @@ from typing import List
 
 from colorama import Fore, Style
 
-from models.backup_config import MountDrive
+from models.backup_config import BackupItem, MountDrive, ResticConfiguration
 
 
 def mount_drive(drive: MountDrive) -> None:
@@ -57,3 +57,31 @@ def run_cmd(cmd: str) -> None:
         print(f"{Fore.RED}Error: The specified executable was not found.{Style.RESET_ALL}")
     except Exception as e:
         print(f"{Fore.RED}An unexpected error occurred: {e}{Style.RESET_ALL}")
+
+
+def backup(restic_configuration: ResticConfiguration, backup_item: BackupItem) -> None:
+    command = [
+        "restic",
+        "-r",
+        restic_configuration.repository_location,
+        "--password-file",
+        restic_configuration.repository_password,
+        "backup",
+        backup_item.folder,
+        "--tag",
+        backup_item.restic_tag,
+    ]
+
+    print(f"{Fore.CYAN}--- Starting Restic backup for folder: {Style.BRIGHT}{backup_item.folder}{Style.NORMAL} ---")
+
+    try:
+        subprocess.run(command, check=True, stdout=sys.stdout, stderr=sys.stderr)
+        print(f"{Fore.GREEN}Restic backup completed successfully.{Style.RESET_ALL}")
+    except FileNotFoundError:
+        print(
+            f"{Fore.RED}Error: 'restic' command not found. Please ensure Restic is installed and in your PATH.{Style.RESET_ALL}"
+        )
+        raise
+    except subprocess.CalledProcessError as e:
+        print(f"{Fore.RED}Error: Restic backup failed with exit code {e.returncode}.{Style.RESET_ALL}")
+        raise

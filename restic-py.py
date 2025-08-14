@@ -30,6 +30,10 @@ def run_config(config: BackupConfig) -> None:
     if config.pre_backup_cmd:
         core.run_cmd(config.pre_backup_cmd)
 
+    if config.restic_configuration and config.backup:
+        for backup_item in config.backup:
+            core.backup(config.restic_configuration, backup_item)
+
 
 if __name__ == "__main__":
     init(autoreset=True)
