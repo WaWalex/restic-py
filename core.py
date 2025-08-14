@@ -46,7 +46,7 @@ def mount_drive(drive: MountDrive) -> None:
 
 
 def run_cmd(cmd: str) -> None:
-    print(f"{Fore.YELLOW}--- Running pre-backup command: {Style.BRIGHT}{cmd}{Style.NORMAL} ---")
+    print(f"{Fore.YELLOW}--- Running command: {Style.BRIGHT}{cmd}{Style.NORMAL} ---")
 
     try:
         subprocess.run(cmd, shell=True, check=True, executable="/bin/bash", stdout=sys.stdout, stderr=sys.stderr)
@@ -60,21 +60,20 @@ def run_cmd(cmd: str) -> None:
 
 
 def backup(restic_configuration: ResticConfiguration, backup_item: BackupItem) -> None:
-    command = [
-        "restic",
-        "-r",
-        restic_configuration.repository_location,
-        "--password-file",
-        restic_configuration.repository_password,
-        "backup",
-        backup_item.folder,
-        "--tag",
-        backup_item.restic_tag,
-    ]
-
     print(f"{Fore.CYAN}--- Starting Restic backup for folder: {Style.BRIGHT}{backup_item.folder}{Style.NORMAL} ---")
 
     try:
+        command = [
+            "restic",
+            "-r",
+            restic_configuration.repository_location,
+            "--password-file",
+            restic_configuration.repository_password,
+            "backup",
+            backup_item.folder,
+            "--tag",
+            backup_item.restic_tag,
+        ]
         subprocess.run(command, check=True, stdout=sys.stdout, stderr=sys.stderr)
         print(f"{Fore.GREEN}Restic backup completed successfully.{Style.RESET_ALL}")
     except FileNotFoundError:

@@ -19,20 +19,26 @@ def run_all_configs() -> None:
 
 
 def run_config(config: BackupConfig) -> None:
-    print(
-        f"{Fore.YELLOW}--- Starting {Style.BRIGHT}{config}{Style.NORMAL} Restic Backup using Restic-Py ---{Style.RESET_ALL}"
-    )
+    print(f"{Fore.YELLOW}--- Starting {Style.BRIGHT}{config}{Style.NORMAL} Restic Backup using Restic-Py ---")
 
     if config.mount_drives:
-        for drive in config.mount_drives:
-            core.mount_drive(drive)
+        core.mount_drive(config.mount_drives)
 
     if config.pre_backup_cmd:
         core.run_cmd(config.pre_backup_cmd)
 
     if config.restic_configuration and config.backup:
-        for backup_item in config.backup:
-            core.backup(config.restic_configuration, backup_item)
+        try:
+            for backup_item in config.backup:
+                core.backup(config.restic_configuration, backup_item)
+        except Exception as e:
+            print(f"{Fore.RED}Error during backup: {e}")
+            if config.run_post_backup_cmd_on_backup_failure and config.post_backup_cmd:
+                core.run_cmd(config.post_backup_cmd)
+            return
+
+    if config.post_backup_cmd:
+        core.run_cmd(config.post_backup_cmd)
 
 
 if __name__ == "__main__":
